@@ -3,39 +3,97 @@
 <head>
 <meta charset="utf-8">
 <title>ALLGOAI Earth</title>
+
 <style>
 body {
   margin:0;
   background:#0e0e11;
   color:#eee;
-  font-family:system-ui;
+  font-family: system-ui;
 }
-#topbar{
-  padding:10px;
+
+header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 20px;
+  background:#16161d;
+  box-shadow:0 2px 6px rgba(0,0,0,.4);
 }
+
+header h1 {
+  margin:0;
+  font-size:18px;
+}
+
+header button {
+  background:#3a6bff;
+  border:none;
+  color:white;
+  padding:8px 14px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+
 #app-list {
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
   gap:16px;
   padding:20px;
 }
+
 .app-card {
   background:#1b1b22;
   border-radius:12px;
   padding:16px;
   box-shadow:0 4px 12px rgba(0,0,0,.4);
+  position:relative;
 }
-.app-title{font-weight:600;margin-bottom:6px;}
-.app-desc{font-size:13px;opacity:.7;margin-bottom:10px;}
-button{cursor:pointer;}
+
+.app-title {
+  font-size:16px;
+  font-weight:600;
+  margin-bottom:6px;
+}
+
+.app-desc {
+  font-size:13px;
+  opacity:.7;
+  margin-bottom:12px;
+}
+
+.app-card button {
+  background:#3a6bff;
+  border:none;
+  color:white;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.delete-btn {
+  position:absolute;
+  top:8px;
+  right:8px;
+  background:none;
+  border:none;
+  font-size:14px;
+  opacity:.6;
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<div id="topbar">
-  <button onclick="location.href='buddy.html'">＋ Create App</button>
-</div>
+<header>
+  <h1>ALLGOAI Earth</h1>
+  <!-- ★ Buddy導線 -->
+  <button onclick="location.href='buddy.html'">
+    作りたい (Buddy)
+  </button>
+</header>
 
 <div id="app-list"></div>
 
@@ -44,29 +102,27 @@ button{cursor:pointer;}
 async function renderApps(){
   const apps = await getApps();
   const container = document.getElementById("app-list");
-  container.innerHTML="";
+  container.innerHTML = "";
 
   apps.forEach(app=>{
-    const div=document.createElement("div");
+    const div = document.createElement("div");
     div.className="app-card";
     div.innerHTML=`
       <div class="app-title">${app.name}</div>
-      <div class="app-desc">${app.id}</div>
+      <div class="app-desc">${app.description || ""}</div>
+      <button class="open-btn">Open</button>
+      <button class="delete-btn">🗑</button>
     `;
 
-    const open=document.createElement("button");
-    open.textContent="Open";
-    open.onclick=()=>location.href="runner.html?id="+app.id;
+    div.querySelector(".open-btn").onclick=()=>{
+      location.href = "app.html?id="+app.id;
+    };
 
-    const del=document.createElement("button");
-    del.textContent="🗑";
-    del.onclick=async()=>{
+    div.querySelector(".delete-btn").onclick=async()=>{
       await deleteApp(app.id);
       renderApps();
     };
 
-    div.appendChild(open);
-    div.appendChild(del);
     container.appendChild(div);
   });
 }
