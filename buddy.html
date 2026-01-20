@@ -64,7 +64,8 @@ async function send(){
 
   addMsg(text,"user");
 
-  const aiText = aiRespond(text);
+  // ★ ここが修正点
+  const aiText = await aiRespond(text);
   addMsg(aiText,"ai");
 
   // spec保存
@@ -74,7 +75,6 @@ async function send(){
     body:JSON.stringify({id:specId, spec})
   });
 
-  // 生成段階に到達したらボタン出す
   if(spec.decided){
     const btn=document.createElement("button");
     btn.textContent="生成する";
