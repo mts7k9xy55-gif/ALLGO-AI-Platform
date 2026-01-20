@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Runner</title>
+</head>
+<body style="margin:0;background:black">
+
+<iframe id="frame" style="width:100vw;height:100vh;border:none;"></iframe>
+
+<script src="util.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const appId = params.get("id");
+
+async function load(){
+  const app = await getApp(appId);
+  const files = JSON.parse(app.files || "{}");
+
+  // index.html を実行
+  const html = files["index.html"] || "<h1>No App Content</h1>";
+
+  document.getElementById("frame").srcdoc = html;
+
+  // 起動ログ
+  logEvent({
+    id: crypto.randomUUID(),
+    type:"run",
+    ts: Date.now(),
+    app:{ id:app.id, name:app.name },
+    data:{}
+  });
+}
+
+load();
+</script>
+</body>
+</html>

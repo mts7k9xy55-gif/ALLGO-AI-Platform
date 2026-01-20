@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>BuddyBot</title>
+<style>
+body{margin:0;background:#111;color:#eee;font-family:system-ui;}
+#chat{height:80vh;overflow:auto;padding:20px;}
+#input{position:fixed;bottom:0;width:100%;display:flex;}
+#input input{flex:1;padding:10px;font-size:16px;}
+#input button{padding:10px;}
+.msg{margin:8px 0;}
+.ai{color:#4af;}
+.user{color:#fff;}
+</style>
+</head>
+<body>
+
+<div id="chat"></div>
+
+<div id="input">
+  <input id="text" placeholder="答える...">
+  <button onclick="send()">Send</button>
+</div>
+
+<script src="util.js"></script>
+<script>
+const specId = crypto.randomUUID();
+let spec = {
+  purpose:"",
+  target_users:"",
+  features:[],
+  ui_style:"",
+  constraints:[],
+  decided:false
+};
+
+const chat = document.getElementById("chat");
+
+function addMsg(text, cls){
+  const d=document.createElement("div");
+  d.className="msg "+cls;
+  d.textContent=text;
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+// ---- 仮AIロジック（あとでLLMに差替） ----
+async function aiRespond(userText){
+  const res = await fetch(API + "/llm", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ spec, message:userText })
+  });
+  return await res.text();
+}
+
+// ---- 送信処理 ----
+async function send(){
+  const t = document.getElementById("text");
+  const text = t.value.trim();
+  if(!text) return;
+  t.value="";
+
+  addMsg(text,"user");
+
+  const aiText = aiRespond(text);
+  addMsg(aiText,"ai");
+
+  // spec保存
+  await fetch(API+"/spec",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id:specId, spec})
+  });
+
+  // 生成段階に到達したらボタン出す
+  if(spec.decided){
+    const btn=document.createElement("button");
+    btn.textContent="生成する";
+    btn.onclick=generateApp;
+    chat.appendChild(btn);
+  }
+}
+
+// ---- 一気生成 ----
+async function generateApp(){
+  // ここは後で本物のLLMに差替
+  const html = `<h1>${spec.purpose}</h1><p>for ${spec.target_users}</p><p>${spec.features.join(",")}</p>`;
+
+  await saveApp({
+    id: crypto.randomUUID(),
+    name: spec.purpose,
+    files: { "index.html": html },
+    createdAt: Date.now()
+  });
+
+  location.href="earth.html";
+}
+
+// ---- 初回AIメッセージ ----
+addMsg("どんなアプリを作りたい？","ai");
+</script>
+</body>
+</html>

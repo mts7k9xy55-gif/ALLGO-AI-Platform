@@ -1,0 +1,9 @@
+{
+    "name": "Blackhole Apps",
+    "short_name": "Blackhole",
+    "start_url": "runner.html",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#000000"
+  }
+  

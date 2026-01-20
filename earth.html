@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ALLGOAI Earth</title>
+<style>
+body {
+  margin:0;
+  background:#0e0e11;
+  color:#eee;
+  font-family:system-ui;
+}
+#topbar{
+  padding:10px;
+}
+#app-list {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:16px;
+  padding:20px;
+}
+.app-card {
+  background:#1b1b22;
+  border-radius:12px;
+  padding:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.4);
+}
+.app-title{font-weight:600;margin-bottom:6px;}
+.app-desc{font-size:13px;opacity:.7;margin-bottom:10px;}
+button{cursor:pointer;}
+</style>
+</head>
+
+<body>
+
+<div id="topbar">
+  <button onclick="location.href='buddy.html'">＋ Create App</button>
+</div>
+
+<div id="app-list"></div>
+
+<script src="util.js"></script>
+<script>
+async function renderApps(){
+  const apps = await getApps();
+  const container = document.getElementById("app-list");
+  container.innerHTML="";
+
+  apps.forEach(app=>{
+    const div=document.createElement("div");
+    div.className="app-card";
+    div.innerHTML=`
+      <div class="app-title">${app.name}</div>
+      <div class="app-desc">${app.id}</div>
+    `;
+
+    const open=document.createElement("button");
+    open.textContent="Open";
+    open.onclick=()=>location.href="runner.html?id="+app.id;
+
+    const del=document.createElement("button");
+    del.textContent="🗑";
+    del.onclick=async()=>{
+      await deleteApp(app.id);
+      renderApps();
+    };
+
+    div.appendChild(open);
+    div.appendChild(del);
+    container.appendChild(div);
+  });
+}
+
+renderApps();
+</script>
+</body>
+</html>

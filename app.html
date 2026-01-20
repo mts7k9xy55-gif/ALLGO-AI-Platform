@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ALLGOAI App</title>
+</head>
+<body style="background:#111;color:#eee;font-family:system-ui;padding:20px">
+
+<h1 id="appName"></h1>
+<button onclick="runApp()">Run</button>
+
+<script src="util.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const appId = params.get("id");
+let appData;
+
+async function init(){
+  appData = await getApp(appId);
+  document.getElementById("appName").textContent = appData.name;
+}
+init();
+
+function runApp(){
+  location.href="runner.html?id="+appId;
+}
+</script>
+</body>
+</html>

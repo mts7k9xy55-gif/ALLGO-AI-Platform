@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Logs</title>
+</head>
+<body style="background:#111;color:#eee;font-family:system-ui;padding:20px">
+
+<h2>Logs</h2>
+<pre id="out"></pre>
+
+<script>
+fetch("https://wandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev/logs")
+.then(r=>r.json())
+.then(d=>{
+  document.getElementById("out").textContent =
+    JSON.stringify(d,null,2);
+});
+</script>
+</body>
+</html>
