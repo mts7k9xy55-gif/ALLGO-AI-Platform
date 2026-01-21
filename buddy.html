@@ -4,114 +4,133 @@
 <meta charset="utf-8">
 <title>Buddy</title>
 <style>
-body { font-family: sans-serif; background:#111; color:#eee; }
-#chat { padding:20px; height:80vh; overflow:auto; }
-.msg { margin:8px 0; }
-.ai { color:#7af; }
-.user { color:#fff; }
-button.choice { margin:4px; }
-#generateBtn { margin:20px; padding:10px 20px; font-size:16px; }
+body{background:#111;color:#eee;font-family:sans-serif;}
+#chat{padding:20px;height:90vh;overflow:auto;}
+.msg{margin:8px 0;}
+.ai{color:#7af;}
+.user{color:#fff;}
+button.choice{margin:4px;padding:6px 10px;}
 </style>
 </head>
 <body>
-
 <div id="chat"></div>
 
 <script>
-const chat = document.getElementById("chat");
+const chat=document.getElementById("chat");
 
-function addMsg(text, cls){
-  const d = document.createElement("div");
-  d.className = "msg " + cls;
-  d.textContent = text;
+function addMsg(t,c){
+  const d=document.createElement("div");
+  d.className="msg "+c;
+  d.textContent=t;
   chat.appendChild(d);
-  chat.scrollTop = chat.scrollHeight;
+  chat.scrollTop=chat.scrollHeight;
 }
 
-// ===== Proto Intent State =====
-let intent = {
-  axis: null,     // tool / play
-  usage: null,    // solo / multi
-  emotion: null   // easy / fun
-};
+// --------------------
+// Proto Intent State
+// --------------------
+let intent={axis:null,usage:null,emotion:null};
+let step=0;
 
-let step = 0;
-
-const questions = [
-  {
-    text: "これは『道具』に近い？ それとも『遊び』に近い？",
-    options: [
-      {label:"道具", value:"tool"},
-      {label:"遊び", value:"play"}
-    ],
-    key:"axis"
-  },
-  {
-    text: "一人で使う？ それとも複数人で使う？",
-    options: [
-      {label:"一人", value:"solo"},
-      {label:"複数人", value:"multi"}
-    ],
-    key:"usage"
-  },
-  {
-    text: "『楽にしたい』？ それとも『楽しくしたい』？",
-    options: [
-      {label:"楽に", value:"easy"},
-      {label:"楽しく", value:"fun"}
-    ],
-    key:"emotion"
-  }
+const questions=[
+ { text:"これは『道具』？『遊び』？",
+   options:[{l:"道具",v:"tool"},{l:"遊び",v:"play"}],
+   key:"axis"
+ },
+ { text:"一人で使う？複数人？",
+   options:[{l:"一人",v:"solo"},{l:"複数",v:"multi"}],
+   key:"usage"
+ },
+ { text:"『楽に』？『楽しく』？",
+   options:[{l:"楽に",v:"easy"},{l:"楽しく",v:"fun"}],
+   key:"emotion"
+ }
 ];
 
 function ask(){
-  const q = questions[step];
-  addMsg(q.text, "ai");
-  
-  q.options.forEach(opt=>{
-    const b = document.createElement("button");
-    b.textContent = opt.label;
+  const q=questions[step];
+  addMsg(q.text,"ai");
+  q.options.forEach(o=>{
+    const b=document.createElement("button");
     b.className="choice";
-    b.onclick = ()=>selectOption(q.key, opt.value, opt.label);
+    b.textContent=o.l;
+    b.onclick=()=>selectOption(q.key,o.v,o.l);
     chat.appendChild(b);
   });
 }
 
-function selectOption(key, value, label){
-  intent[key] = value;
-  addMsg(label, "user");
+function selectOption(key,val,label){
+  intent[key]=val;
+  addMsg(label,"user");
   step++;
-  if(step < questions.length){
-    ask();
-  } else {
-    finishIntent();
-  }
+  if(step<questions.length) ask();
+  else finishIntent();
 }
 
 function finishIntent(){
-  addMsg("OK。方向が見えたよ。これで初期アプリを生成できる。", "ai");
-  
-  const pre = document.createElement("pre");
-  pre.textContent = JSON.stringify(intent, null, 2);
-  chat.appendChild(pre);
-
-  const gen = document.createElement("button");
-  gen.id="generateBtn";
-  gen.textContent="アプリ生成を開始";
-  gen.onclick = ()=>startGeneration();
-  chat.appendChild(gen);
+  addMsg("OK。方向が決まった。生成を開始できる。","ai");
+  const b=document.createElement("button");
+  b.textContent="アプリ生成開始";
+  b.onclick=startGeneration;
+  chat.appendChild(b);
 }
 
-function startGeneration(){
-  addMsg("（ここで次のGeneration Layerに渡す）", "ai");
-  addMsg("intent を Prompt Composer に送信する準備完了。", "ai");
-  console.log("INTENT STATE:", intent);
+// --------------------
+// Prompt Builder
+// --------------------
+function promptBuilder(i){
+  return `
+目的:${i.axis==="tool"?"実用アプリ":"遊びアプリ"}
+利用:${i.usage==="solo"?"一人用":"複数用"}
+方向:${i.emotion==="easy"?"手間削減":"楽しい体験"}
+最小のWebアプリHTMLを生成せよ。
+`;
 }
 
-// ===== Start =====
-addMsg("まず簡単に方向だけ決めよう。", "ai");
+// --------------------
+// Generation Stub
+// --------------------
+async function generateAppFiles(prompt){
+  return {
+    "index.html":`
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Generated App</title></head>
+<body>
+<h1>Generated App</h1>
+<p>${prompt}</p>
+</body>
+</html>`
+  };
+}
+
+// --------------------
+// Save & Jump to Editor
+// --------------------
+async function startGeneration(){
+  addMsg("生成中...","ai");
+
+  const prompt = promptBuilder(intent);
+  const files  = await generateAppFiles(prompt);
+
+  const meta = {
+    title:"New App",
+    description:"Proto Intent App"
+  };
+
+  const res = await fetch("/apps",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({files,meta})
+  });
+
+  const {id}=await res.json();
+  location.href="/editor.html?id="+id;
+}
+
+// start
+addMsg("まず方向を決めよう。","ai");
 ask();
 </script>
-
 </body>
 </html>

@@ -1,0 +1,38 @@
+export default {
+    async fetch(req, env){
+     const url=new URL(req.url);
+   
+     const cors={
+       "Access-Control-Allow-Origin":"*",
+       "Access-Control-Allow-Methods":"GET,POST,OPTIONS",
+       "Access-Control-Allow-Headers":"Content-Type"
+     };
+     if(req.method==="OPTIONS")
+       return new Response("",{headers:cors});
+   
+     // POST /apps  (save)
+     if(url.pathname==="/apps" && req.method==="POST"){
+       const {files,meta}=await req.json();
+       const id=crypto.randomUUID();
+   
+       await env.DB.prepare(
+         "INSERT INTO apps(id,title,description,files) VALUES(?,?,?,?)"
+       ).bind(id,meta.title,meta.description,JSON.stringify(files)).run();
+   
+       return Response.json({id},{headers:cors});
+     }
+   
+     // GET /apps?id=xxx  (load)
+     if(url.pathname==="/apps" && req.method==="GET"){
+       const id=url.searchParams.get("id");
+       const row=await env.DB.prepare(
+         "SELECT * FROM apps WHERE id=?"
+       ).bind(id).first();
+   
+       if(!row) return new Response("Not Found",{status:404,headers:cors});
+       return Response.json(row,{headers:cors});
+     }
+   
+     return new Response("Not Found",{status:404,headers:cors});
+    }
+   }
