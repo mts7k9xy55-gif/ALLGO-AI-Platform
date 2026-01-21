@@ -1,23 +1,83 @@
-<textarea id="prompt" placeholder="作りたいアプリを書く"></textarea>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ALLGOAI Blackhole</title>
+<style>
+body {
+  margin:0;
+  background:#0e0e11;
+  color:#eee;
+  font-family: system-ui;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:40px;
+}
+
+h1 { margin-bottom:20px; }
+
+textarea {
+  width:80%;
+  max-width:700px;
+  height:140px;
+  background:#1b1b22;
+  color:#eee;
+  border:none;
+  border-radius:10px;
+  padding:14px;
+  font-size:15px;
+}
+
+button {
+  margin-top:15px;
+  background:#3a6bff;
+  border:none;
+  color:white;
+  padding:10px 18px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+}
+
+#reply {
+  margin-top:20px;
+  opacity:.8;
+}
+</style>
+</head>
+
+<body>
+
+<h1>ALLGOAI Blackhole</h1>
+
+<textarea id="prompt" placeholder="作りたいアプリを自然文で書く"></textarea>
 <button onclick="sendPrompt()">Generate</button>
+
 <div id="reply"></div>
 
-<script>
-const API = "allgo-ai-platform.pages.devwandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev";
+<!-- util.js を共通APIとして使用 -->
+<script type="module">
+import { createFromPrompt } from "./util.js";
 
 async function sendPrompt(){
-  const msg = document.getElementById("prompt").value;
+  const msg = document.getElementById("prompt").value.trim();
+  if(!msg) return;
 
-  const res = await fetch(API+"/llm",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ message: msg })
-  }).then(r=>r.json());
+  document.getElementById("reply").innerText = "生成中...";
 
-  document.getElementById("reply").innerText = res.reply;
+  const res = await createFromPrompt(msg);
+
+  document.getElementById("reply").innerText = res.reply || "完了";
 
   if(res.saved){
-    location.href="earth.html";
+    // Earthへ
+    setTimeout(()=> location.href="earth.html", 800);
   }
 }
+
+window.sendPrompt = sendPrompt;
 </script>
+
+</body>
+</html>
