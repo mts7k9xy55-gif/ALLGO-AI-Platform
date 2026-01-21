@@ -89,7 +89,11 @@ header button {
 <script src="util.js"></script>
 <script>
 async function renderApps(){
-  const apps = await getApps();
+  const data = await getApps();
+
+  // ★ ここが修正ポイント
+  const apps = Array.isArray(data) ? data : (data.results || []);
+
   const container = document.getElementById("app-list");
   container.innerHTML = "";
 
@@ -97,7 +101,7 @@ async function renderApps(){
     const div = document.createElement("div");
     div.className="app-card";
     div.innerHTML=`
-      <div class="app-title">${app.title}</div>
+      <div class="app-title">${app.title || app.name}</div>
       <div class="app-desc">${app.description || ""}</div>
       <button class="open-btn">Open</button>
       <button class="delete-btn">🗑</button>
