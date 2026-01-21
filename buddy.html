@@ -1,67 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Buddy</title>
+<style>
+body { font-family: sans-serif; background:#111; color:#eee; }
+#chat { padding:20px; height:80vh; overflow:auto; }
+.msg { margin:8px 0; }
+.ai { color:#7af; }
+.user { color:#fff; }
+button.choice { margin:4px; }
+#generateBtn { margin:20px; padding:10px 20px; font-size:16px; }
+</style>
+</head>
 <body>
 
-    <div id="chat"></div>
-    
-    <div id="input">
-      <input id="text" placeholder="答える...">
-      <button onclick="send()">Send</button>
-    </div>
-    
-    <!-- 👇 script は必ず最後 -->
-    <script>
-    const API = "https://wandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev";
-    
-    let spec = {
-      purpose:"",
-      target_users:"",
-      features:[],
-      ui_style:"",
-      constraints:[],
-      decided:false
-    };
-    
-    const chat = document.getElementById("chat");
-    
-    function addMsg(text, cls){
-      const d=document.createElement("div");
-      d.className="msg "+cls;
-      d.textContent=text;
-      chat.appendChild(d);
-      chat.scrollTop=chat.scrollHeight;
-    }
-    
-    async function aiRespond(userText){
-      const res = await fetch(API + "/llm", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ spec, message:userText })
-      });
-      return await res.json();
-    }
-    
-    async function send(){
-      const t = document.getElementById("text");
-      const text = t.value.trim();
-      if(!text) return;
-      t.value="";
-    
-      addMsg(text,"user");
-    
-      const res = await aiRespond(text);
-      addMsg(res.reply,"ai");
-    
-      spec = res.spec;
-    
-      if(spec.decided){
-        const btn=document.createElement("button");
-        btn.textContent="アプリを生成する";
-        btn.onclick=()=>location.href="earth.html";
-        chat.appendChild(btn);
-      }
-    }
-    
-    addMsg("どんなアプリを作りたい？","ai");
-    </script>
-    
-    </body>
-    
+<div id="chat"></div>
+
+<script>
+const chat = document.getElementById("chat");
+
+function addMsg(text, cls){
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.textContent = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ===== Proto Intent State =====
+let intent = {
+  axis: null,     // tool / play
+  usage: null,    // solo / multi
+  emotion: null   // easy / fun
+};
+
+let step = 0;
+
+const questions = [
+  {
+    text: "これは『道具』に近い？ それとも『遊び』に近い？",
+    options: [
+      {label:"道具", value:"tool"},
+      {label:"遊び", value:"play"}
+    ],
+    key:"axis"
+  },
+  {
+    text: "一人で使う？ それとも複数人で使う？",
+    options: [
+      {label:"一人", value:"solo"},
+      {label:"複数人", value:"multi"}
+    ],
+    key:"usage"
+  },
+  {
+    text: "『楽にしたい』？ それとも『楽しくしたい』？",
+    options: [
+      {label:"楽に", value:"easy"},
+      {label:"楽しく", value:"fun"}
+    ],
+    key:"emotion"
+  }
+];
+
+function ask(){
+  const q = questions[step];
+  addMsg(q.text, "ai");
+  
+  q.options.forEach(opt=>{
+    const b = document.createElement("button");
+    b.textContent = opt.label;
+    b.className="choice";
+    b.onclick = ()=>selectOption(q.key, opt.value, opt.label);
+    chat.appendChild(b);
+  });
+}
+
+function selectOption(key, value, label){
+  intent[key] = value;
+  addMsg(label, "user");
+  step++;
+  if(step < questions.length){
+    ask();
+  } else {
+    finishIntent();
+  }
+}
+
+function finishIntent(){
+  addMsg("OK。方向が見えたよ。これで初期アプリを生成できる。", "ai");
+  
+  const pre = document.createElement("pre");
+  pre.textContent = JSON.stringify(intent, null, 2);
+  chat.appendChild(pre);
+
+  const gen = document.createElement("button");
+  gen.id="generateBtn";
+  gen.textContent="アプリ生成を開始";
+  gen.onclick = ()=>startGeneration();
+  chat.appendChild(gen);
+}
+
+function startGeneration(){
+  addMsg("（ここで次のGeneration Layerに渡す）", "ai");
+  addMsg("intent を Prompt Composer に送信する準備完了。", "ai");
+  console.log("INTENT STATE:", intent);
+}
+
+// ===== Start =====
+addMsg("まず簡単に方向だけ決めよう。", "ai");
+ask();
+</script>
+
+</body>
+</html>
