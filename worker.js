@@ -2,26 +2,29 @@ export default {
     async fetch(request, env) {
       const url = new URL(request.url);
   
+      // --- CORS Headers ---
       const cors = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
       };
+  
+      // --- Preflight ---
       if (request.method === "OPTIONS") {
         return new Response("", { headers: cors });
       }
   
-      // ---- LLM ----
+      // ---- /llm ----
       if (url.pathname === "/llm" && request.method === "POST") {
         const { spec, message } = await request.json();
   
         const systemPrompt = `
   あなたは Buddy という日本語のアプリ設計AIです。
-  ユーザーと自然な会話をしながらアプリ設計specを完成させます。
+  ユーザーと自然な会話をしながらアプリ設計を完成させます。
   
-  spec構造:
+  設計構造:
   {
-   purpose: string,       // ← これは裏で自動生成（ユーザーには質問しない）
+   purpose: string,
    target_users: string,
    features: string[],
    ui_style: string,
@@ -31,20 +34,18 @@ export default {
   
   ルール:
   - 必ず日本語で返答
-  - まずユーザー発言を一文で要約（内部で purpose 更新に使う）
-  - purpose はユーザー発言から自動更新する（会話では聞かない）
-  - 未入力の項目を1つだけ自然な日本語で質問
-  - 会話に「purpose」「spec」「JSON」という単語は出さない
-  - spec が十分埋まったら decided=true にする
+  - ユーザー発言を一文で要約して内部目的を更新
+  - 未入力項目を1つだけ質問
+  - 「purpose」「spec」「JSON」という単語は出さない
+  - 設計が十分埋まったら decided=true にする
   
-  出力形式(JSONのみ):
-  
+  出力:
   {
    "reply": "ユーザーに見せる文章",
-   "spec": 更新後のspec
+   "spec": 更新後の設計
   }
   
-  現在spec:
+  現在の設計:
   ${JSON.stringify(spec)}
   `;
   
@@ -55,11 +56,23 @@ export default {
           ]
         });
   
-        const parsed = JSON.parse(result.response);
-        return Response.json(parsed, { headers: cors });
+        // --- Safe parse ---
+        const raw = result.response;
+        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+  
+        return new Response(JSON.stringify(parsed), {
+          headers: {
+            ...cors,
+            "Content-Type": "application/json"
+          }
+        });
       }
   
-      return new Response("Not Found", { status: 404, headers: cors });
+      // ---- Not Found ----
+      return new Response("Not Found", {
+        status: 404,
+        headers: cors
+      });
     }
-  };
+  }
   
