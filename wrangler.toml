@@ -1,2 +1,11 @@
-[[ai]]
+name = "allgoai-api"
+main = "worker.js"
+compatibility_date = "2026-01-21"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "allgoai-db"
+database_id = "D1のIDをここに"
+
+[ai]
 binding = "AI"
