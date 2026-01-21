@@ -1,6 +1,11 @@
 // ===== util.js =====
 const API = "https://wandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev";
 
+async function safeJson(r){
+  const text = await r.text();
+  try { return JSON.parse(text); } catch { return { error:"NOT_JSON", raw:text }; }
+}
+
 // ---- apps ----
 async function saveApp(app){
   const r = await fetch(API + "/apps", {
@@ -14,24 +19,30 @@ async function saveApp(app){
       }
     })
   });
-  return await r.json();
+  return await safeJson(r);
 }
 
 async function getApps(){
   const r = await fetch(API + "/apps");
-  return await r.json();
+  const data = await safeJson(r);
+
+  // ★ ここが最重要：必ず「配列」を返す
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;        // D1 all()形式
+  if (Array.isArray(data?.result)) return data.result;          // 変種対策
+  return []; // 何が来ても落とさない
 }
 
 async function getApp(id){
-  const r = await fetch(API + "/apps?id=" + id);
-  return await r.json();
+  const r = await fetch(API + "/apps?id=" + encodeURIComponent(id));
+  return await safeJson(r);
 }
 
 async function deleteApp(id){
-  const r = await fetch(API + "/apps?id=" + id, {
+  const r = await fetch(API + "/apps?id=" + encodeURIComponent(id), {
     method:"DELETE"
   });
-  return await r.json();
+  return await safeJson(r);
 }
 
 // ---- logging (後で拡張) ----
