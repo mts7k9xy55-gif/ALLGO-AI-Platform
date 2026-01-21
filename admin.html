@@ -2,20 +2,29 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Logs</title>
+<title>ALLGOAI App</title>
 </head>
+
 <body style="background:#111;color:#eee;font-family:system-ui;padding:20px">
 
-<h2>Logs</h2>
-<pre id="out"></pre>
+<h1 id="appName"></h1>
+<button onclick="runApp()">Run</button>
 
+<script src="util.js"></script>
 <script>
-fetch("https://wandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev/logs")
-.then(r=>r.json())
-.then(d=>{
-  document.getElementById("out").textContent =
-    JSON.stringify(d,null,2);
-});
+const params = new URLSearchParams(location.search);
+const appId = params.get("id");
+let appData;
+
+async function init(){
+  appData = await getApp(appId);
+  document.getElementById("appName").textContent = appData.title;
+}
+init();
+
+function runApp(){
+  location.href="runner.html?id="+appId;
+}
 </script>
 </body>
 </html>

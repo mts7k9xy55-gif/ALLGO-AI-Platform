@@ -1,43 +1,40 @@
+// ===== util.js =====
 const API = "https://wandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev";
 
-// 共通API
-async function api(path, options = {}) {
-  const res = await fetch(API + path, {
-    headers: { "Content-Type": "application/json" },
-    ...options
+// ---- apps ----
+async function saveApp(app){
+  const r = await fetch(API + "/apps", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      files: app.files,
+      meta: {
+        title: app.name,
+        description: app.description || ""
+      }
+    })
   });
-  if (!res.ok) throw await res.text();
-  return res.json().catch(()=>null);
+  return await r.json();
 }
 
-// ---- Apps ----
-
-// 全アプリ取得
-async function getApps() {
-  return await api("/apps"); // 配列で返る
+async function getApps(){
+  const r = await fetch(API + "/apps");
+  return await r.json();
 }
 
-// 単体取得（一覧から探す）
-async function getApp(id) {
-  const apps = await getApps();
-  return apps.find(a => a.id === id);
+async function getApp(id){
+  const r = await fetch(API + "/apps?id=" + id);
+  return await r.json();
 }
 
-// 保存
-async function saveApp(app) {
-  return await api("/app", {
-    method: "POST",
-    body: JSON.stringify(app)
-  });
-}
-
-// ---- Logs ----
-async function logEvent(ev) {
-  return await api("/log", {
-    method: "POST",
-    body: JSON.stringify(ev)
-  });
-}
 async function deleteApp(id){
-  return await api("/app?id="+id, { method:"DELETE" });
+  const r = await fetch(API + "/apps?id=" + id, {
+    method:"DELETE"
+  });
+  return await r.json();
+}
+
+// ---- logging (後で拡張) ----
+function logEvent(e){
+  console.log("LOG:", e);
 }
