@@ -1,4 +1,14 @@
-<script>
+<body>
+
+    <div id="chat"></div>
+    
+    <div id="input">
+      <input id="text" placeholder="答える...">
+      <button onclick="send()">Send</button>
+    </div>
+    
+    <!-- 👇 script は必ず最後 -->
+    <script>
     const API = "https://wandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev";
     
     let spec = {
@@ -38,12 +48,10 @@
       addMsg(text,"user");
     
       const res = await aiRespond(text);
-    
       addMsg(res.reply,"ai");
     
-      spec = res.spec;   // ← 状態更新
+      spec = res.spec;
     
-      // 生成段階に到達したらボタン表示
       if(spec.decided){
         const btn=document.createElement("button");
         btn.textContent="アプリを生成する";
@@ -52,7 +60,8 @@
       }
     }
     
-    // 初回メッセージ
     addMsg("どんなアプリを作りたい？","ai");
     </script>
+    
+    </body>
     
