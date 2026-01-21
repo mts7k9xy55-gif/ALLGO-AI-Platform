@@ -52,8 +52,11 @@ async function aiRespond(userText){
     headers:{"Content-Type":"application/json"},
     body: JSON.stringify({ spec, message:userText })
   });
-  return await res.text();
+  const json = await res.json();
+  spec = json.spec;          // ★ specを更新
+  return json.reply;         // ★ 表示用メッセージ
 }
+
 
 // ---- 送信処理 ----
 async function send(){
