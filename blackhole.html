@@ -3,33 +3,127 @@
 <head>
 <meta charset="utf-8">
 <title>Blackhole</title>
+<style>
+body{background:#111;color:#eee;font-family:system-ui;margin:0}
+#chat{padding:20px;height:90vh;overflow:auto}
+.msg{margin:8px 0}
+.ai{color:#7af}
+.user{color:#fff}
+button.choice{margin:4px;padding:6px 10px}
+</style>
 </head>
-<body style="background:#111;color:#eee;font-family:system-ui;padding:20px">
+<body>
 
-<h2>Create App</h2>
-<input id="name" placeholder="App Name"><br><br>
-<textarea id="code" rows="10" cols="50"
-placeholder="HTML code here"></textarea><br><br>
-<button onclick="create()">Generate</button>
+<div id="chat"></div>
 
-<script src="util.js"></script>
 <script>
-async function create(){
-  const name = document.getElementById("name").value;
-  const code = document.getElementById("code").value;
+const chat=document.getElementById("chat");
 
-  const app = {
-    id: crypto.randomUUID(),
-    name,
-    files: {
-      "index.html": code
-    },
-    createdAt: Date.now()
-  };
-
-  await saveApp(app);
-  location.href="earth.html";
+function addMsg(t,c){
+  const d=document.createElement("div");
+  d.className="msg "+c;
+  d.textContent=t;
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
 }
+
+// ================= Proto Intent =================
+let intent={axis:null,usage:null,emotion:null};
+let step=0;
+
+const questions=[
+ { text:"これは『道具』？『遊び』？",
+   options:[{l:"道具",v:"tool"},{l:"遊び",v:"play"}],
+   key:"axis"
+ },
+ { text:"一人で使う？複数人？",
+   options:[{l:"一人",v:"solo"},{l:"複数",v:"multi"}],
+   key:"usage"
+ },
+ { text:"『楽に』？『楽しく』？",
+   options:[{l:"楽に",v:"easy"},{l:"楽しく",v:"fun"}],
+   key:"emotion"
+ }
+];
+
+function ask(){
+  const q=questions[step];
+  addMsg(q.text,"ai");
+  q.options.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="choice";
+    b.textContent=o.l;
+    b.onclick=()=>selectOption(q.key,o.v,o.l);
+    chat.appendChild(b);
+  });
+}
+
+function selectOption(key,val,label){
+  intent[key]=val;
+  addMsg(label,"user");
+  step++;
+  if(step<questions.length) ask();
+  else finishIntent();
+}
+
+function finishIntent(){
+  addMsg("OK。方向が決まった。アプリを生成する。","ai");
+  const b=document.createElement("button");
+  b.textContent="生成開始";
+  b.onclick=startGeneration;
+  chat.appendChild(b);
+}
+
+// ================= Prompt Builder =================
+function promptBuilder(i){
+ return `
+目的:${i.axis==="tool"?"実用アプリ":"遊びアプリ"}
+利用:${i.usage==="solo"?"一人用":"複数用"}
+方向:${i.emotion==="easy"?"手間削減":"楽しい体験"}
+最小のWebアプリHTMLを生成せよ。
+`;
+}
+
+// ================= Generation Stub =================
+async function generateAppFiles(prompt){
+ return {
+   "index.html":`
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Generated App</title></head>
+<body>
+<h1>Generated App</h1>
+<p>${prompt}</p>
+</body>
+</html>`
+ };
+}
+
+// ================= Save & Jump =================
+async function startGeneration(){
+ addMsg("生成中...","ai");
+
+ const prompt = promptBuilder(intent);
+ const files  = await generateAppFiles(prompt);
+
+ const meta={
+   title:"New App",
+   description:"Proto Intent Generated App"
+ };
+
+ const res = await fetch("/apps",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({files,meta})
+ });
+
+ const {id}=await res.json();
+ location.href="editor.html?id="+id;
+}
+
+// ================= Start =================
+addMsg("まず方向を決めよう。","ai");
+ask();
 </script>
 </body>
 </html>
