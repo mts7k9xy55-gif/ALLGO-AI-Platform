@@ -1,32 +1,32 @@
-export const API = "https://wandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev";
+// === frontend util.js ===
+const API = "https://wandering-dream-51c5allgoai-api.rgvr8syq2x.workers.dev";
 
-async function safeJson(r){
-  const t = await r.text();
-  try { return JSON.parse(t); }
-  catch { return { error:"NOT_JSON", raw:t }; }
-}
-
-export async function createFromPrompt(message){
-  const r = await fetch(API + "/llm", {
+async function saveApp(app){
+  const r = await fetch(API + "/apps", {
     method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ message })
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      files: app.files,
+      meta:{
+        title: app.name,
+        description: app.description || ""
+      }
+    })
   });
-  return await safeJson(r);
+  return await r.json();
 }
 
-export async function getApps(){
+async function getApps(){
   const r = await fetch(API + "/apps");
-  const data = await safeJson(r);
-  return Array.isArray(data) ? data : [];
+  return await r.json();
 }
 
-export async function getApp(id){
-  const r = await fetch(API + "/apps?id=" + encodeURIComponent(id));
-  return await safeJson(r);
+async function getApp(id){
+  const r = await fetch(API + "/apps?id="+id);
+  return await r.json();
 }
 
-export async function deleteApp(id){
-  const r = await fetch(API + "/apps?id=" + encodeURIComponent(id), { method:"DELETE" });
-  return await safeJson(r);
+async function deleteApp(id){
+  const r = await fetch(API + "/apps?id="+id,{method:"DELETE"});
+  return await r.json();
 }
