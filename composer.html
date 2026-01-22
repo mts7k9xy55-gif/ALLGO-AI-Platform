@@ -1,0 +1,40 @@
+<h2>Composer Editor</h2>
+
+<div style="display:flex;gap:12px;height:90vh;">
+  <textarea id="editor" style="width:50%;"></textarea>
+  <iframe id="preview" style="width:50%;border:none;"></iframe>
+</div>
+
+<button onclick="save()">Save to Earth</button>
+
+<script src="util.js"></script>
+<script>
+async function load(){
+  const prompt = new URL(location.href).searchParams.get("prompt");
+
+  // === LLM呼び出し（いまは仮コード） ===
+  // 後で /llm に差し替える
+  const fakeCode = `
+  <h1>${decodeURIComponent(prompt)}</h1>
+  <p>Generated prototype UI</p>
+  `;
+
+  document.getElementById("editor").value = fakeCode;
+  updatePreview();
+}
+
+function updatePreview(){
+  document.getElementById("preview").srcdoc =
+    document.getElementById("editor").value;
+}
+
+document.getElementById("editor").addEventListener("input",updatePreview);
+
+async function save(){
+  const code = document.getElementById("editor").value;
+  await saveApp({title:"New App",description:""}, {"index.html":code});
+  location.href="earth.html";
+}
+
+load();
+</script>
