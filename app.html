@@ -1,29 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>ALLGOAI App</title>
-</head>
-<body style="background:#111;color:#eee;font-family:system-ui;padding:20px">
-
-<h1 id="appName"></h1>
-<button onclick="runApp()">Run</button>
+<h2>App Preview</h2>
+<iframe id="frame" style="width:100%;height:80vh;border:none;"></iframe>
+<br>
+<button id="install">⬇ Install PWA</button>
 
 <script src="util.js"></script>
 <script>
-const params = new URLSearchParams(location.search);
-const appId = params.get("id");
-let appData;
+let deferredPrompt;
 
-async function init(){
-  appData = await getApp(appId);
-  document.getElementById("appName").textContent = appData.name;
-}
-init();
+window.addEventListener("beforeinstallprompt", e=>{
+  e.preventDefault();
+  deferredPrompt = e;
+});
 
-function runApp(){
-  location.href="runner.html?id="+appId;
+document.getElementById("install").onclick = async ()=>{
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+  }
+};
+
+async function load(){
+  const id = new URL(location.href).searchParams.get("id");
+  const app = await getApp(id);
+  const files = JSON.parse(app.files);
+  document.getElementById("frame").srcdoc = files["index.html"];
 }
+load();
 </script>
-</body>
-</html>

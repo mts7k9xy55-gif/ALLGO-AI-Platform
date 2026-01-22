@@ -1,126 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>ALLGOAI Earth</title>
+<h2>Earth — Apps</h2>
+<div id="grid"></div>
 
 <style>
-body {
-  margin:0;
-  background:#0e0e11;
-  color:#eee;
-  font-family: system-ui;
-}
-
-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px 20px;
-  background:#16161d;
-}
-
-header button {
-  background:#3a6bff;
-  border:none;
-  color:white;
-  padding:8px 14px;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-#app-list {
+#grid{
   display:grid;
-  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
   gap:16px;
-  padding:20px;
 }
-
-.app-card {
-  background:#1b1b22;
-  border-radius:12px;
+.card{
   padding:16px;
-  position:relative;
-}
-
-.app-title {
-  font-size:16px;
-  font-weight:600;
-  margin-bottom:6px;
-}
-
-.app-desc {
-  font-size:13px;
-  opacity:.7;
-  margin-bottom:12px;
-}
-
-.app-card button {
-  background:#3a6bff;
-  border:none;
+  border-radius:12px;
+  background:#1e1e28;
   color:white;
-  padding:6px 10px;
-  border-radius:6px;
   cursor:pointer;
+  transition:.2s;
 }
-
-.delete-btn {
-  position:absolute;
-  top:8px;
-  right:8px;
-  background:none;
-  border:none;
-  font-size:14px;
-  opacity:.6;
-  cursor:pointer;
-}
+.card:hover{ transform:scale(1.03); }
 </style>
-</head>
-
-<body>
-
-<header>
-  <h1>ALLGOAI Earth</h1>
-  <button onclick="location.href='blackhole.html'">Create</button>
-</header>
-
-<div id="app-list"></div>
 
 <script src="util.js"></script>
 <script>
-async function renderApps(){
-  const data = await getApps();
-
-  // ★ ここが修正ポイント
-  const apps = Array.isArray(data) ? data : (data.results || []);
-
-  const container = document.getElementById("app-list");
-  container.innerHTML = "";
+async function load(){
+  const apps = await getApps();
+  const grid = document.getElementById("grid");
+  grid.innerHTML="";
 
   apps.forEach(app=>{
     const div = document.createElement("div");
-    div.className="app-card";
-    div.innerHTML=`
-      <div class="app-title">${app.title || app.name}</div>
-      <div class="app-desc">${app.description || ""}</div>
-      <button class="open-btn">Open</button>
-      <button class="delete-btn">🗑</button>
-    `;
-
-    div.querySelector(".open-btn").onclick=()=>{
-      location.href = "admin.html?id="+app.id;
-    };
-
-    div.querySelector(".delete-btn").onclick=async()=>{
-      await deleteApp(app.id);
-      renderApps();
-    };
-
-    container.appendChild(div);
+    div.className="card";
+    div.innerHTML = `<h3>${app.title}</h3><p>${app.description||""}</p>`;
+    div.onclick = ()=>location.href="app.html?id="+app.id;
+    grid.appendChild(div);
   });
 }
-
-renderApps();
+load();
 </script>
-</body>
-</html>

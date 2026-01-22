@@ -1,23 +1,19 @@
-<textarea id="prompt" placeholder="作りたいアプリを書け"></textarea>
-<button onclick="runLLM()">Generate</button>
+<h2>Blackhole — Create App</h2>
+
+<input id="title" placeholder="App title"><br><br>
+<textarea id="code" placeholder="Paste your HTML code"></textarea><br><br>
+<button onclick="createApp()">Register</button>
 
 <script src="util.js"></script>
 <script>
-async function runLLM(){
-  const msg = document.getElementById("prompt").value;
+async function createApp(){
+  const title = document.getElementById("title").value;
+  const code = document.getElementById("code").value;
 
-  const r = await fetch(API + "/llm", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ message: msg })
-  });
+  const meta = { title, description:"" };
+  const files = { "index.html": code };
 
-  const j = await r.json();
-
-  if(j.decided){
-    location.href = "earth.html"; 
-  } else {
-    alert("Buddy needs more details. Try clarifying your request.");
-  }
+  await saveApp(meta, files);
+  location.href="earth.html";
 }
 </script>
